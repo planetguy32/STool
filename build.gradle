@@ -1,0 +1,126 @@
+
+buildscript {
+    repositories {
+        mavenCentral()
+        maven {
+            name = "forge"
+            url = "http://files.minecraftforge.net/maven"
+        }
+        maven {
+            name = "sonatype"
+            url = "https://oss.sonatype.org/content/repositories/snapshots/"
+        }
+    }
+    dependencies {
+        classpath "net.minecraftforge.gradle:ForgeGradle:1.2-SNAPSHOT"
+    }
+}
+// *** Load ForgeGradle
+apply plugin: "curseforge"
+apply plugin: "forge"
+
+
+sourceCompatibility = 1.7
+targetCompatibility = 1.7
+
+// *** Load Build Config
+file("build.properties").withReader {
+    def prop = new Properties()
+    prop.load(it)
+    project.ext.config = new ConfigSlurper().parse(prop)
+}
+
+// *** Load Environment Variables
+ext.build_number = "${System.getenv("TRAVIS_BUILD_NUMBER") ?: "X"}"
+
+// *** Configure
+version          = "${config.version_mc}-${config.version}.${build_number}"
+group            = "${config.package}"
+archivesBaseName = "${config.filename}"
+
+// *** Print Information
+println "~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+println "~ version = ${version}"
+println "~ forge = ${config.version_mc}-${config.version_forge}"
+println "~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+
+minecraft {
+    version = "${config.version_mc}-${config.version_forge}"
+
+	if (file("../run").exists()) {
+		runDir = "../run"
+	} else {
+		runDir = "run"
+	}
+}
+
+dependencies {
+    //compile "com.mod-buildcraft:buildcraft:6.0.8:dev"  // adds buildcraft to the dev env
+}
+
+processResources {
+    // this will ensure that this task is redone when the versions change.
+    inputs.property "version",   project.version
+    inputs.property "mcversion", project.minecraft.version
+
+    // expand variables
+    from(sourceSets.main.resources.srcDirs) {
+        include "**/*.properties"
+        include "**/*.info"
+
+        expand "version": project.version, "mcversion": project.minecraft.version
+    }
+
+    // copy everything else
+    from(sourceSets.main.resources.srcDirs) {
+		exclude "**/*.properties"
+        exclude "**/*.info"
+    }
+}
+
+// *** Additional Jars
+task sourceJar(type: Jar) {
+    from sourceSets.main.allSource
+    classifier = "src"
+}
+
+task devJar(type: Jar) {
+    from sourceSets.main.output
+    classifier = "dev"
+}
+
+artifacts {
+    archives sourceJar, devJar
+}
+
+// *** Deploy Jars
+configurations {
+	deployJars
+}
+
+dependencies {
+    deployJars "org.apache.maven.wagon:wagon-ftp:2.2"
+}
+
+uploadArchives {
+	onlyIf {
+		System.getenv("FTP_USER") != null && System.getenv("FTP_PASSWORD") != null &&
+		System.getenv("TRAVIS_BRANCH") == "master" && System.getenv("TRAVIS_PULL_REQUEST") == "false"
+	}
+	repositories.mavenDeployer {
+		configuration = configurations.deployJars
+		repository(url: "${config.ftp_location}"){
+			authentication(userName: "${System.getenv("FTP_USER")}", password: "${System.getenv("FTP_PASSWORD")}")
+		}
+	}
+}
+
+curse {
+	onlyIf {
+		System.getenv("TRAVIS_BRANCH") == "master" && System.getenv("TRAVIS_PULL_REQUEST") == "false"
+	}
+    apiKey = System.getenv("CURSEAPI")
+    projectId = "${config.curse_project_id}"
+    changelog = "Build for commit ${System.getenv("TRAVIS_COMMIT")}"
+    releaseType = "release"
+}

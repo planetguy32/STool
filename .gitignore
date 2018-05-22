@@ -1,0 +1,14 @@
+# os garbage
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# idea
+*.iml
+*.ipr
+*.iws
+/bin/
+.classpath
+/.gradle/
+.project
+/.settings/

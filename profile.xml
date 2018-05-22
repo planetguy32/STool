@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ExportedView Name="Live Results" type="table">
+ <TableData NumRows="33" NumColumns="4">
+  <TableHeader>   <TableColumn><![CDATA[Hot Spots - Method]]></TableColumn>
+   <TableColumn><![CDATA[Self Time [%]]]></TableColumn>
+   <TableColumn><![CDATA[Self Time]]></TableColumn>
+   <TableColumn><![CDATA[Total Time]]></TableColumn>
+   <TableColumn><![CDATA[Invocations]]></TableColumn>
+  </TableHeader>
+  <TableBody>
+   <TableRow>
+    <TableColumn><![CDATA[net.lepko.easycrafting.core.recipe.RecipeChecker$CraftabilityChecker.run()]]></TableColumn>
+    <TableColumn><![CDATA[56.46%]]></TableColumn>
+    <TableColumn><![CDATA[6466.737 ms]]></TableColumn>
+    <TableColumn><![CDATA[7437.578 ms]]></TableColumn>
+    <TableColumn><![CDATA[1]]></TableColumn>
+  </TableRow>
+   <TableRow>
+    <TableColumn><![CDATA[net.minecraft.server.MinecraftServer.run()]]></TableColumn>
+    <TableColumn><![CDATA[17.99%]]></TableColumn>
+    <TableColumn><![CDATA[2060.815 ms]]></TableColumn>
+    <TableColumn><![CDATA[2060.86 ms]]></TableColumn>
+    <TableColumn><![CDATA[1]]></TableColumn>
+  </TableRow>
+   <TableRow>
+    <TableColumn><![CDATA[java.util.concurrent.FutureTask.run()]]></TableColumn>
+    <TableColumn><![CDATA[15.98%]]></TableColumn>
+    <TableColumn><![CDATA[1830.408 ms]]></TableColumn>
+    <TableColumn><![CDATA[1830.408 ms]]></TableColumn>
+    <TableColumn><![CDATA[2]]></TableColumn>
+  </TableRow>
+   <TableRow>
+    <TableColumn><![CDATA[net.lepko.easycrafting.core.recipe.RecipeHelper.canCraft(net.lepko.easycrafting.core.recipe.WrappedRecipe, net.minecraft.inventory.IInventory, java.util.List, boolean, int, int)]]></TableColumn>
+    <TableColumn><![CDATA[1.93%]]></TableColumn>
+    <TableColumn><![CDATA[220.992 ms]]></TableColumn>
+    <TableColumn><![CDATA[838.284 ms]]></TableColumn>
+    <TableColumn><![CDATA[5439]]></TableColumn>
+  </TableRow>
+   <TableRow>
+    <TableColumn><![CDATA[net.lepko.easycrafting.core.recipe.RecipeHelper.isItemInInventory(net.minecraft.item.ItemStack, net.lepko.easycrafting.core.recipe.WrappedRecipe, net.minecraft.inventory.IInventory)]]></TableColumn>
+    <TableColumn><![CDATA[1.55%]]></TableColumn>
+    <TableColumn><![CDATA[177.035 ms]]></TableColumn>
+    <TableColumn><![CDATA[214.866 ms]]></TableColumn>
+    <TableColumn><![CDATA[5967]]></TableColumn>
+  </TableRow>
+   <TableRow>
+    <TableColumn><![CDATA[net.lepko.easycrafting.core.util.InventoryUtils.setContents(net.minecraft.inventory.IInventory, net.minecraft.inventory.IInventory)]]></TableColumn>
+    <TableColumn><![CDATA[1.25%]]></TableColumn>
+    <TableColumn><![CDATA[142.64 ms]]></TableColumn>
+    <TableColumn><![CDATA[142.64 ms]]></TableColumn>
+    <TableColumn><![CDATA[6143]]></TableColumn>
+  </TableRow>
+   <TableRow>
+    <TableColumn><![CDATA[java.lang.UNIXProcess$4.run()]]></TableColumn>
+    <TableColumn><![CDATA[1.06%]]></TableColumn>
+    <TableColumn><![CDATA[121.631 ms]]></TableColumn>
+    <TableColumn><![CDATA[121.631 ms]]></TableColumn>
+    <TableColumn><![CDATA[9]]></TableColumn>
+  </TableRow>
+   <TableRow>
+    <TableColumn><![CDATA[net.lepko.easycrafting.core.recipe.RecipeChecker$CraftabilityChecker.getCraftableRecipes(net.minecraft.inventory.IInventory, int, long, java.util.List)]]></TableColumn>
+    <TableColumn><![CDATA[0.98%]]></TableColumn>
+    <TableColumn><![CDATA[111.89 ms]]></TableColumn>
+    <TableColumn><![CDATA[970.429 ms]]></TableColumn>
+    <TableColumn><![CDATA[1]]></TableColumn>
+  </TableRow>
+   <TableRow>
+    <TableColumn><![CDATA[net.lepko.easycrafting.core.util.InventoryUtils.addItemToInventory(net.minecraft.inventory.IInventory, net.minecraft.item.ItemStack, int, int)]]></TableColumn>
+    <TableColumn><![CDATA[0.50%]]></TableColumn>
+    <TableColumn><![CDATA[57.508 ms]]></TableColumn>
+    <TableColumn><![CDATA[129.499 ms]]></TableColumn>
+    <TableColumn><![CDATA[351]]></TableColumn>
+  </TableRow>
+   <TableRow>
+    <TableColumn><![CDATA[net.lepko.easycrafting.core.util.StackUtils.areEqualNoSize(net.minecraft.item.ItemStack, net.minecraft.item.ItemStack)]]></TableColumn>
+    <TableColumn><![CDATA[0.36%]]></TableColumn>
+    <TableColumn><![CDATA[41.507 ms]]></TableColumn>
+    <TableColumn><![CDATA[57.077 ms]]></TableColumn>
+    <TableColumn><![CDATA[12636]]></TableColumn>
+  </TableRow>
+   <TableRow>
+    <TableColumn><![CDATA[net.lepko.easycrafting.core.recipe.WrappedRecipe.getOutput()]]></TableColumn>
+    <TableColumn><![CDATA[0.30%]]></TableColumn>
+    <TableColumn><![CDATA[34.569 ms]]></TableColumn>
+    <TableColumn><![CDATA[39.989 ms]]></TableColumn>
+    <TableColumn><![CDATA[6123]]></TableColumn>
+  </TableRow>
+   <TableRow>
+    <TableColumn><![CDATA[net.lepko.easycrafting.core.recipe.RecipeHelper.getRecipesForItemFromList(net.minecraft.item.ItemStack, net.lepko.easycrafting.core.recipe.WrappedRecipe, java.util.List)]]></TableColumn>
+    <TableColumn><![CDATA[0.27%]]></TableColumn>
+    <TableColumn><![CDATA[31.327 ms]]></TableColumn>
+    <TableColumn><![CDATA[77.131 ms]]></TableColumn>
+    <TableColumn><![CDATA[3847]]></TableColumn>
+  </TableRow>
+   <TableRow>
+    <TableColumn><![CDATA[net.lepko.easycrafting.core.recipe.RecipeHelper.isItemInInventory(java.util.List, net.lepko.easycrafting.core.recipe.WrappedRecipe, net.minecraft.inventory.IInventory)]]></TableColumn>
+    <TableColumn><![CDATA[0.24%]]></TableColumn>
+    <TableColumn><![CDATA[27.822 ms]]></TableColumn>
+    <TableColumn><![CDATA[140.925 ms]]></TableColumn>
+    <TableColumn><![CDATA[2301]]></TableColumn>
+  </TableRow>
+   <TableRow>
+    <TableColumn><![CDATA[net.lepko.easycrafting.core.util.InventoryUtils.getMainInventorySize(net.minecraft.inventory.IInventory)]]></TableColumn>
+    <TableColumn><![CDATA[0.16%]]></TableColumn>
+    <TableColumn><![CDATA[17.758 ms]]></TableColumn>
+    <TableColumn><![CDATA[17.754 ms]]></TableColumn>
+    <TableColumn><![CDATA[11757]]></TableColumn>
+  </TableRow>
+   <TableRow>
+    <TableColumn><![CDATA[net.lepko.easycrafting.core.recipe.handler.VanillaRecipeHandler.matchItem(net.minecraft.item.ItemStack, net.minecraft.item.ItemStack, net.lepko.easycrafting.core.recipe.WrappedRecipe)]]></TableColumn>
+    <TableColumn><![CDATA[0.14%]]></TableColumn>
+    <TableColumn><![CDATA[16.431 ms]]></TableColumn>
+    <TableColumn><![CDATA[16.429 ms]]></TableColumn>
+    <TableColumn><![CDATA[3230]]></TableColumn>
+  </TableRow>
+   <TableRow>
+    <TableColumn><![CDATA[net.lepko.easycrafting.core.util.InventoryUtils.consumeItemForCrafting(net.minecraft.inventory.IInventory, int, java.util.List)]]></TableColumn>
+    <TableColumn><![CDATA[0.14%]]></TableColumn>
+    <TableColumn><![CDATA[15.586 ms]]></TableColumn>
+    <TableColumn><![CDATA[15.585 ms]]></TableColumn>
+    <TableColumn><![CDATA[371]]></TableColumn>
+  </TableRow>
+   <TableRow>
+    <TableColumn><![CDATA[net.lepko.easycrafting.core.util.StackUtils.areEqualNoSizeNoNBT(net.minecraft.item.ItemStack, net.minecraft.item.ItemStack)]]></TableColumn>
+    <TableColumn><![CDATA[0.14%]]></TableColumn>
+    <TableColumn><![CDATA[15.569 ms]]></TableColumn>
+    <TableColumn><![CDATA[15.569 ms]]></TableColumn>
+    <TableColumn><![CDATA[12636]]></TableColumn>
+  </TableRow>
+   <TableRow>
+    <TableColumn><![CDATA[net.lepko.easycrafting.core.util.InventoryUtils.storeContents(net.minecraft.inventory.IInventory)]]></TableColumn>
+    <TableColumn><![CDATA[0.13%]]></TableColumn>
+    <TableColumn><![CDATA[14.71 ms]]></TableColumn>
+    <TableColumn><![CDATA[14.71 ms]]></TableColumn>
+    <TableColumn><![CDATA[351]]></TableColumn>
+  </TableRow>
+   <TableRow>
+    <TableColumn><![CDATA[net.lepko.easycrafting.core.recipe.RecipeHelper.canCraft(net.lepko.easycrafting.core.recipe.WrappedRecipe, net.minecraft.inventory.IInventory, java.util.List, int)]]></TableColumn>
+    <TableColumn><![CDATA[0.12%]]></TableColumn>
+    <TableColumn><![CDATA[13.607 ms]]></TableColumn>
+    <TableColumn><![CDATA[551.049 ms]]></TableColumn>
+    <TableColumn><![CDATA[3391]]></TableColumn>
+  </TableRow>
+   <TableRow>
+    <TableColumn><![CDATA[net.lepko.easycrafting.core.recipe.handler.ForgeRecipeHandler.matchItem(net.minecraft.item.ItemStack, net.minecraft.item.ItemStack, net.lepko.easycrafting.core.recipe.WrappedRecipe)]]></TableColumn>
+    <TableColumn><![CDATA[0.11%]]></TableColumn>
+    <TableColumn><![CDATA[12.914 ms]]></TableColumn>
+    <TableColumn><![CDATA[12.911 ms]]></TableColumn>
+    <TableColumn><![CDATA[14840]]></TableColumn>
+  </TableRow>
+   <TableRow>
+    <TableColumn><![CDATA[net.lepko.easycrafting.core.recipe.RecipeHelper.canCraft(net.lepko.easycrafting.core.recipe.WrappedRecipe, net.minecraft.inventory.IInventory)]]></TableColumn>
+    <TableColumn><![CDATA[0.06%]]></TableColumn>
+    <TableColumn><![CDATA[6.641 ms]]></TableColumn>
+    <TableColumn><![CDATA[307.483 ms]]></TableColumn>
+    <TableColumn><![CDATA[1697]]></TableColumn>
+  </TableRow>
+   <TableRow>
+    <TableColumn><![CDATA[net.lepko.easycrafting.core.recipe.RecipeHelper.getRecipesForItemFromList(java.util.List, net.lepko.easycrafting.core.recipe.WrappedRecipe, java.util.List)]]></TableColumn>
+    <TableColumn><![CDATA[0.05%]]></TableColumn>
+    <TableColumn><![CDATA[5.727 ms]]></TableColumn>
+    <TableColumn><![CDATA[48.425 ms]]></TableColumn>
+    <TableColumn><![CDATA[1525]]></TableColumn>
+  </TableRow>
+   <TableRow>
+    <TableColumn><![CDATA[net.lepko.easycrafting.core.util.StackUtils.copyStack(net.minecraft.item.ItemStack, int)]]></TableColumn>
+    <TableColumn><![CDATA[0.05%]]></TableColumn>
+    <TableColumn><![CDATA[5.421 ms]]></TableColumn>
+    <TableColumn><![CDATA[5.419 ms]]></TableColumn>
+    <TableColumn><![CDATA[6123]]></TableColumn>
+  </TableRow>
+   <TableRow>
+    <TableColumn><![CDATA[java.nio.DirectByteBuffer$Deallocator.run()]]></TableColumn>
+    <TableColumn><![CDATA[0.02%]]></TableColumn>
+    <TableColumn><![CDATA[2.851 ms]]></TableColumn>
+    <TableColumn><![CDATA[2.85 ms]]></TableColumn>
+    <TableColumn><![CDATA[1328]]></TableColumn>
+  </TableRow>
+   <TableRow>
+    <TableColumn><![CDATA[net.lepko.easycrafting.core.util.InventoryUtils.addItemToInventory(net.minecraft.inventory.IInventory, net.minecraft.item.ItemStack)]]></TableColumn>
+    <TableColumn><![CDATA[0.00%]]></TableColumn>
+    <TableColumn><![CDATA[0.348 ms]]></TableColumn>
+    <TableColumn><![CDATA[129.993 ms]]></TableColumn>
+    <TableColumn><![CDATA[351]]></TableColumn>
+  </TableRow>
+   <TableRow>
+    <TableColumn><![CDATA[net.lepko.easycrafting.core.recipe.RecipeManager.getAllRecipes()]]></TableColumn>
+    <TableColumn><![CDATA[0.00%]]></TableColumn>
+    <TableColumn><![CDATA[0.244 ms]]></TableColumn>
+    <TableColumn><![CDATA[0.244 ms]]></TableColumn>
+    <TableColumn><![CDATA[1]]></TableColumn>
+  </TableRow>
+   <TableRow>
+    <TableColumn><![CDATA[net.lepko.easycrafting.core.recipe.handler.VanillaRecipeHandler.getCraftingResult(net.lepko.easycrafting.core.recipe.WrappedRecipe, java.util.List)]]></TableColumn>
+    <TableColumn><![CDATA[0.00%]]></TableColumn>
+    <TableColumn><![CDATA[0.214 ms]]></TableColumn>
+    <TableColumn><![CDATA[0.606 ms]]></TableColumn>
+    <TableColumn><![CDATA[351]]></TableColumn>
+  </TableRow>
+   <TableRow>
+    <TableColumn><![CDATA[net.lepko.easycrafting.core.util.InventoryUtils.getEmptySlot(net.minecraft.inventory.IInventory, int, int)]]></TableColumn>
+    <TableColumn><![CDATA[0.00%]]></TableColumn>
+    <TableColumn><![CDATA[0.202 ms]]></TableColumn>
+    <TableColumn><![CDATA[0.202 ms]]></TableColumn>
+    <TableColumn><![CDATA[351]]></TableColumn>
+  </TableRow>
+   <TableRow>
+    <TableColumn><![CDATA[net.lepko.easycrafting.core.recipe.RecipeChecker$CraftabilityChecker.setCraftableRecipes()]]></TableColumn>
+    <TableColumn><![CDATA[0.00%]]></TableColumn>
+    <TableColumn><![CDATA[0.167 ms]]></TableColumn>
+    <TableColumn><![CDATA[970.841 ms]]></TableColumn>
+    <TableColumn><![CDATA[1]]></TableColumn>
+  </TableRow>
+   <TableRow>
+    <TableColumn><![CDATA[java.util.concurrent.ThreadPoolExecutor$Worker.run()]]></TableColumn>
+    <TableColumn><![CDATA[0.00%]]></TableColumn>
+    <TableColumn><![CDATA[0.056 ms]]></TableColumn>
+    <TableColumn><![CDATA[1828.973 ms]]></TableColumn>
+    <TableColumn><![CDATA[1]]></TableColumn>
+  </TableRow>
+   <TableRow>
+    <TableColumn><![CDATA[net.lepko.easycrafting.core.util.InventoryUtils.<clinit>]]></TableColumn>
+    <TableColumn><![CDATA[0.00%]]></TableColumn>
+    <TableColumn><![CDATA[0.045 ms]]></TableColumn>
+    <TableColumn><![CDATA[0.045 ms]]></TableColumn>
+    <TableColumn><![CDATA[1]]></TableColumn>
+  </TableRow>
+   <TableRow>
+    <TableColumn><![CDATA[sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run()]]></TableColumn>
+    <TableColumn><![CDATA[0.00%]]></TableColumn>
+    <TableColumn><![CDATA[0.0 ms]]></TableColumn>
+    <TableColumn><![CDATA[0.0 ms]]></TableColumn>
+    <TableColumn><![CDATA[1]]></TableColumn>
+  </TableRow>
+   <TableRow>
+    <TableColumn><![CDATA[java.util.TimerThread.run()]]></TableColumn>
+    <TableColumn><![CDATA[0.00%]]></TableColumn>
+    <TableColumn><![CDATA[0.0 ms]]></TableColumn>
+    <TableColumn><![CDATA[0.0 ms]]></TableColumn>
+    <TableColumn><![CDATA[1]]></TableColumn>
+  </TableRow>
+  </TableBody> </TableData>
+</ExportedView>
