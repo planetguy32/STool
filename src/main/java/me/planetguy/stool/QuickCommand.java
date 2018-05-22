@@ -1,8 +1,12 @@
-package me.planetguy.ylcmj;
+package me.planetguy.stool;
 
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.ChatComponentText;
+
+import java.util.List;
 
 public class QuickCommand extends CommandBase {
 
@@ -37,6 +41,22 @@ public class QuickCommand extends CommandBase {
 
     @Override
     public void processCommand(ICommandSender snd, String[] args) throws CommandException {
-        impl.processCommand(snd, args);
+        String s=impl.processCommand(snd, args);
+        if(s!=null)
+            snd.addChatMessage(new ChatComponentText(s));
     }
+
+    @Override
+    public boolean canCommandSenderUseCommand(ICommandSender p_71519_1_) {
+        return true;
+    }
+
+    //Assume all indexes are usernames
+    //Don't push tab or you'll get a username
+    //This is a horrible hack
+    @Override
+    public List addTabCompletionOptions(ICommandSender cs, String[] args) {
+        return getListOfStringsMatchingLastWord(args, MinecraftServer.getServer().getAllUsernames());
+    }
+
 }

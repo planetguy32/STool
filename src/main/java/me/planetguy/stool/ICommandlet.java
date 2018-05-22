@@ -1,10 +1,10 @@
-package me.planetguy.ylcmj;
+package me.planetguy.stool;
 
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 
 public interface ICommandlet {
 
-    void processCommand(ICommandSender ics, String[] args) throws CommandException;
+    String processCommand(ICommandSender ics, String[] args) throws CommandException;
 
 }

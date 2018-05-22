@@ -1,8 +1,4 @@
-package me.planetguy.ylcmj;
-
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
+package me.planetguy.stool;
 
 public class Constants {
     public static final String version="0.2";
