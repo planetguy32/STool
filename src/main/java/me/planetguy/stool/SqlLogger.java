@@ -142,6 +142,8 @@ public class SqlLogger {
     }
 
     public static String startMatch(List<String> users) {
+        if(Stool.IS_DB_READ_ONLY)
+            return "\u00A76This is edit!";
         if (matchStart == 0) {
             try {
                 //if(knownTeam1.size()==0 || knownTeam2.size()==0)
@@ -221,6 +223,8 @@ public class SqlLogger {
     }
 
     public static void addEvent(EntityPlayer user, String eventType, String... extras) {
+        if(Stool.IS_DB_READ_ONLY)
+            return;
         try {
             if (matchStart == 0)
                 return;
@@ -270,6 +274,8 @@ public class SqlLogger {
 
 
     private static boolean endGame(EntityPlayer player, int winner) {
+        if(Stool.IS_DB_READ_ONLY)
+            return false;
         try {
             addEvent(player, "endgame", "" + winner);
             declareWinner.setInt(1, winner);

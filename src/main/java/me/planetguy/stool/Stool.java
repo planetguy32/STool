@@ -41,6 +41,8 @@ public class Stool {
     public String defaultPrefix;
     public String defaultSuffix;
 
+    public static boolean IS_DB_READ_ONLY =false;
+
     public void setupNicks(){
         try {
             String[] text = cfg.get(
@@ -58,6 +60,8 @@ public class Stool {
 
             defaultSuffix=cfg.getString("defaultSuffix",
                     "ranks","#","Default username prefix");
+
+            IS_DB_READ_ONLY =cfg.getBoolean("readOnly", "general", false, "Should the DB be read-only?");
 
             cfg.save();
 
