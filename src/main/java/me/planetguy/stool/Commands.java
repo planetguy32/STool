@@ -8,6 +8,7 @@ import net.minecraft.command.server.CommandTeleport;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ChatComponentText;
+import org.apache.commons.lang3.StringEscapeUtils;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -172,6 +173,22 @@ public class Commands {
                     }
                 }
         ));
+
+        /*
+        cmds.add(new QuickCommand(
+                "nick",
+                "/nick <nickname>: Sets your own nickname",
+                new ICommandlet() {
+                    @Override
+                    public String processCommand(ICommandSender ics, String[] args) throws CommandException {
+                        String nick = StringEscapeUtils.unescapeJava(String.join(" ", args));
+                        Stool.updateNickname(ics.getCommandSenderName(), nick);
+                        return "Nickname set to "+Stool.nicks.get(ics.getCommandSenderName());
+                    }
+                }
+        ));
+        */
+
         return cmds;
     }
 

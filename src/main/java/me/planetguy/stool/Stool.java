@@ -8,17 +8,21 @@ import cpw.mods.fml.common.eventhandler.Event;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.PlayerEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;
-import cpw.mods.fml.relauncher.Side;
 import net.minecraft.command.ICommand;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.item.ItemStack;
+import net.minecraft.event.ClickEvent;
+import net.minecraft.scoreboard.ScorePlayerTeam;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.ChatComponentTranslation;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.IChatComponent;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.config.Configuration;
+import net.minecraftforge.common.config.Property;
 import net.minecraftforge.event.ServerChatEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
@@ -30,8 +34,61 @@ import java.util.*;
 @Mod(modid = Constants.modID, version = Constants.version, acceptableRemoteVersions = "*")
 public class Stool {
 
+    public static HashMap<String, String> nicks=new HashMap<>();
+
+    private static Configuration cfg;
+
+    public String defaultPrefix;
+    public String defaultSuffix;
+
+    public void setupNicks(){
+        try {
+            String[] text = cfg.get(
+                    "ranks",
+                    "ranks",
+                    new String[0],
+                    "Form: player=rank"
+            ).getStringList();
+            for (String s : text) {
+                String[] parts = s.split("=");
+                nicks.put(parts[0], parts[1]);
+            }
+            defaultPrefix=cfg.getString("defaultPrefix",
+                    "ranks","#","Default username prefix");
+
+            defaultSuffix=cfg.getString("defaultSuffix",
+                    "ranks","#","Default username prefix");
+
+            cfg.save();
+
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+    }
+
+
+    public static void updateNickname(String player, String newNick) {
+        List<String> strings=new ArrayList<>();
+        nicks.put(player, newNick);
+        Property prop = cfg.get(
+
+                "ranks",
+                "ranks",
+                new String[0],
+                "Form: player=rank"
+        );
+        for(String name:nicks.keySet()){
+            strings.add(name+"="+nicks.get(name));
+        }
+        prop.set(strings.toArray(new String[0]));
+        cfg.save();
+    }
+
+
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent pie) {
+        cfg=new Configuration(pie.getSuggestedConfigurationFile());
+        setupNicks();
         MinecraftForge.EVENT_BUS.register(this);
         FMLCommonHandler.instance().bus().register(this);
     }
@@ -46,26 +103,34 @@ public class Stool {
 
     @SubscribeEvent
     public void handle(ServerChatEvent event) {
+        String username;
+        if(nicks.containsKey(event.username)){
+            username=nicks.get(event.username);
+        } else {
+            username=defaultPrefix+event.username+defaultSuffix;
+        }
+
         String text = event.message;
         if ("pause".equals(text)) {
             if (SqlLogger.pause(event.player))
-                setChatMessage(event, "\u00A74" + event.message);
+                setChatMessage(event, "\u00A74" + event.message, username);
         }
         if ("resume".equals(text)) {
             if (SqlLogger.resume(event.player))
-                setChatMessage(event, "\u00A7A" + event.message);
+                setChatMessage(event, "\u00A7A" + event.message, username);
         }
         if ("go".equals(text)) {
             tryToStartMatch(event, false);
-            setChatMessage(event, "\u00A7A"+event.message);
+            setChatMessage(event, "\u00A7A"+event.message, username);
         }
         if ("ready".equals(text)) {
             broadcastMessage(SqlLogger.getCurrentGameGuess());
         }
         if ("gg".equals(text)){
-            setChatMessage(event, "\u00A75" + event.message);
+            setChatMessage(event, "\u00A75" + event.message, username);
             broadcastMessage("\u00A76Please end the match - use /win (if you won) or /lose (otherwise)");
         }
+        setChatMessage(event, text, username);
         SqlLogger.addEvent(event.player, "chat", event.message);
     }
 
@@ -116,9 +181,15 @@ public class Stool {
         broadcastMessage(SqlLogger.startMatch(usernames));
     }
 
-    public static void setChatMessage(ServerChatEvent event, String newText) {
+    public static IChatComponent generateUsernameComponent(EntityPlayer p, String nickname) {
+        ChatComponentText chatcomponenttext = new ChatComponentText(ScorePlayerTeam.formatPlayerName(p.getTeam(), nickname));
+        chatcomponenttext.getChatStyle().setChatClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/msg " + p.getCommandSenderName() + " "));
+        return chatcomponenttext;
+    }
+
+    public static void setChatMessage(ServerChatEvent event, String newText, String nick) {
         event.component = new ChatComponentTranslation("chat.type.text",
-                event.player.func_145748_c_(),
+                generateUsernameComponent(event.player, nick),
                 newText);
     }
 
@@ -189,6 +260,7 @@ public class Stool {
 
     @SubscribeEvent
     public void handle(BlockEvent.BreakEvent event) {
+        /*
         if (logEvent(event)) {
             ItemStack hand=event.getPlayer().getItemInUse();
             SqlLogger.addEvent(
@@ -197,6 +269,7 @@ public class Stool {
                     event.block.getLocalizedName(),
                     hand==null ? "null" : hand.getUnlocalizedName());
         }
+        */
     }
 
     @SubscribeEvent
