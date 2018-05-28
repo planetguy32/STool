@@ -8,12 +8,11 @@ import net.minecraft.entity.player.EntityPlayer;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 
 public class Commands {
 
-    public static int parseOrDefault(String text, int defaultVal) {
+    private static int parseOrDefault(String text, int defaultVal) {
         try {
             return Integer.parseInt(text);
         } catch (NumberFormatException e) {
@@ -151,11 +150,6 @@ public class Commands {
                 new ICommandlet() {
                     @Override
                     public String processCommand(ICommandSender ics, String[] args) throws CommandException {
-                        HashSet<String> names = new HashSet<>();
-                        for (String s : args) {
-                            names.add(CommandBase.getPlayer(ics, s).getDisplayName());
-                        }
-
                         try {
                             return "\u00A76Team 1 is now " + SqlLogger.ACTIVE_LOGGER.adjustTeam(1, args, (EntityPlayer) ics);
                         }catch(SQLException e){
@@ -171,10 +165,6 @@ public class Commands {
                 new ICommandlet() {
                     @Override
                     public String processCommand(ICommandSender ics, String[] args) throws CommandException {
-                        HashSet<String> names = new HashSet<>();
-                        for (String s : args) {
-                            names.add(CommandBase.getPlayer(ics, s).getDisplayName());
-                        }
                         try {
                             return "\u00A76Team 2 is now " + SqlLogger.ACTIVE_LOGGER.adjustTeam(2, args, (EntityPlayer) ics);
                         } catch (SQLException e) {

@@ -5,7 +5,6 @@ import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.event.FMLServerStartingEvent;
 import cpw.mods.fml.common.event.FMLServerStoppingEvent;
-import cpw.mods.fml.common.eventhandler.Event;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.PlayerEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;
@@ -31,23 +30,24 @@ import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.entity.player.PlayerUseItemEvent;
 import net.minecraftforge.event.world.BlockEvent;
-import org.lwjgl.Sys;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 @Mod(modid = Constants.modID, version = Constants.version, acceptableRemoteVersions = "*")
 public class Stool {
 
-    public static HashMap<String, String> nicks=new HashMap<>();
+    private static HashMap<String, String> nicks=new HashMap<>();
 
     private static Configuration cfg;
 
-    public String defaultPrefix;
-    public String defaultSuffix;
+    private String defaultPrefix;
+    private String defaultSuffix;
 
     public static boolean IS_DB_READ_ONLY =false;
 
-    public void setupNicks(){
+    private void setupNicks(){
         try {
             String[] text = cfg.get(
                     "ranks",
@@ -63,7 +63,7 @@ public class Stool {
                     "ranks","#","Default username prefix");
 
             defaultSuffix=cfg.getString("defaultSuffix",
-                    "ranks","#","Default username prefix");
+                    "ranks","#","Default username suffix");
 
             IS_DB_READ_ONLY =cfg.getBoolean("readOnly", "general", false, "Should the DB be read-only?");
 
@@ -152,8 +152,9 @@ public class Stool {
 
     private int time = 0;
 
+    @SuppressWarnings("unchecked")
     private static List<EntityPlayerMP> getPlayers(){
-        return MinecraftServer.getServer()
+        return (List<EntityPlayerMP>) MinecraftServer.getServer()
                         .getConfigurationManager()
                         .playerEntityList;
     }
@@ -200,13 +201,13 @@ public class Stool {
         return true;
     }
 
-    public static IChatComponent generateUsernameComponent(EntityPlayer p, String nickname) {
+    private static IChatComponent generateUsernameComponent(EntityPlayer p, String nickname) {
         ChatComponentText chatcomponenttext = new ChatComponentText(ScorePlayerTeam.formatPlayerName(p.getTeam(), nickname));
         chatcomponenttext.getChatStyle().setChatClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/msg " + p.getCommandSenderName() + " "));
         return chatcomponenttext;
     }
 
-    public static void setChatMessage(ServerChatEvent event, String newText, String nick) {
+    private static void setChatMessage(ServerChatEvent event, String newText, String nick) {
         event.component = new ChatComponentTranslation("chat.type.text",
                 generateUsernameComponent(event.player, nick),
                 new ChatComponentText(newText));
@@ -218,7 +219,7 @@ public class Stool {
         }
     }
 
-    public static void sendMessage(EntityPlayer player, String message){
+    private static void sendMessage(EntityPlayer player, String message){
         for(String s:message.split("\n")){
             player.addChatMessage(new ChatComponentText(s));
         }
@@ -330,7 +331,6 @@ public class Stool {
                 event.player,
                 "place",
                 event.block.getLocalizedName());
-
     }
 
 }

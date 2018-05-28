@@ -15,14 +15,14 @@ public class QuickCommand extends CommandBase {
     private final ICommandlet impl;
     private final int permLevel;
 
-    public QuickCommand(String name, String usage, ICommandlet impl){
+    QuickCommand(String name, String usage, ICommandlet impl){
         this.name = name;
         this.usage=usage;
         this.impl=impl;
         permLevel=0;
     }
 
-    public QuickCommand(String name, String usage, ICommandlet impl, int perms){
+    QuickCommand(String name, String usage, ICommandlet impl, int perms){
         this.name = name;
         this.usage=usage;
         this.impl=impl;

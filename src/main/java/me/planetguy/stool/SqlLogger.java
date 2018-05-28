@@ -2,7 +2,6 @@ package me.planetguy.stool;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.AxisAlignedBB;
-import org.lwjgl.Sys;
 
 import java.sql.*;
 import java.util.*;
@@ -13,7 +12,7 @@ public class SqlLogger {
 
     public static SqlLogger ACTIVE_LOGGER=new SqlLogger();
 
-    public final int MAX_PER_TEAM=10;
+    private final int MAX_PER_TEAM=10;
 
     private Connection conn = null;
     private PreparedStatement addEvent;
@@ -36,17 +35,16 @@ public class SqlLogger {
 
     private String mapName = "";
 
-    private Thread eventUploader;
     private final BlockingQueue<StoolEvent> queue=new LinkedBlockingDeque<>();
 
-    public SqlLogger() {
-        eventUploader=new Thread(new Runnable() {
+    private SqlLogger() {
+        Thread eventUploader = new Thread(new Runnable() {
             @Override
             public void run() {
-                while(true){
+                while (true) {
                     try {
-                        StoolEvent ev=queue.take();
-                        synchronized(this){
+                        StoolEvent ev = queue.take();
+                        synchronized (this) {
                             addEventToDB(ev);
                         }
                     } catch (InterruptedException e) {
@@ -54,7 +52,7 @@ public class SqlLogger {
                     }
                 }
             }
-        }, Constants.modID+"_eventUploader");
+        }, Constants.modID + "_eventUploader");
         eventUploader.setPriority(Thread.currentThread().getPriority()-1);
         eventUploader.start();
     }
@@ -174,7 +172,7 @@ public class SqlLogger {
         }
     }
 
-    long matchTime(long timeSample) {
+    private long matchTime(long timeSample) {
         return timeSample - matchStart - matchTimeSkipped;
     }
 
@@ -389,7 +387,7 @@ public class SqlLogger {
             System.out.println(rs);
             return rs.getInt(1);
         } catch (SQLException e) {
-
+            e.printStackTrace();
         }
         return -1;
     }
@@ -407,7 +405,7 @@ public class SqlLogger {
 
         String newTeamString=String.join(", ", team);
 
-        addEvent((EntityPlayer) ics, "adjustTeam",
+        addEvent(ics, "adjustTeam",
                 Integer.toString(i),
                 oldTeamString,
                 newTeamString);
