@@ -97,13 +97,19 @@ public class Stool {
     public void preInit(FMLPreInitializationEvent pie) {
         cfg=new Configuration(pie.getSuggestedConfigurationFile());
         setupNicks();
+        if(IS_DB_READ_ONLY)
+            return;
         MinecraftForge.EVENT_BUS.register(this);
         FMLCommonHandler.instance().bus().register(this);
     }
 
     @Mod.EventHandler
     public static void startServer(FMLServerStartingEvent event) {
-        for(ICommand cmd:Commands.createCommands()){
+        for(ICommand cmd:
+                IS_DB_READ_ONLY
+                        ? Commands.createQueryCommands()
+                        :Commands.createGameCommands()
+                ){
             event.registerServerCommand(cmd);
         }
         SqlLogger.ACTIVE_LOGGER.setupSql();

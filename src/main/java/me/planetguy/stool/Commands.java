@@ -20,7 +20,47 @@ public class Commands {
         }
     }
 
-    public static List<ICommand> createCommands() {
+    public static List<ICommand> createQueryCommands() {
+        List<ICommand> cmds = new ArrayList<>();
+        addRadiusChecker(cmds,
+                "hmp",
+                "/hmp <radius>: Tells you how many times a player was present within the radius",
+                "pos",
+                " heartbeats within "
+        );
+
+        addRadiusChecker(cmds,
+                "hmd",
+                "/hmd <radius>: Tells you how many deaths have happened within the radius",
+                "death",
+                " deaths within "
+        );
+
+        addRadiusChecker(cmds,
+                "hmk",
+                "/hmk <radius>: Tells you how many kills have been dealt by someone within the radius",
+                "kill",
+                " kills within "
+        );
+
+        addRadiusChecker(cmds,
+                "hmt",
+                "/hmt <radius>: Tells you how many times damage was taken within the radius",
+                "takedmg",
+                " times within "
+        );
+
+        addRadiusChecker(cmds,
+                "hmi",
+                "/hmi <radius>: Tells you how many times damage was inflicted from within the radius",
+                "dealdmg",
+                " times within "
+        );
+        return cmds;
+    }
+
+
+    public static List<ICommand> createGameCommands() {
         List<ICommand> cmds = new ArrayList<>();
         cmds.add(new QuickCommand(
                 "win",
@@ -95,41 +135,6 @@ public class Commands {
                 2
         ));
 
-        addRadiusChecker(cmds,
-                "hmp",
-                "/hmp <radius>: Tells you how many times a player was present within the radius",
-                "pos",
-                " heartbeats within "
-        );
-
-        addRadiusChecker(cmds,
-                "hmd",
-                "/hmd <radius>: Tells you how many deaths have happened within the radius",
-                "death",
-                " deaths within "
-        );
-
-        addRadiusChecker(cmds,
-                "hmk",
-                "/hmk <radius>: Tells you how many kills have been dealt by someone within the radius",
-                "kill",
-                " kills within "
-        );
-
-        addRadiusChecker(cmds,
-                "hmt",
-                "/hmt <radius>: Tells you how many times damage was taken within the radius",
-                "takedmg",
-                " times within "
-        );
-
-        addRadiusChecker(cmds,
-                "hmi",
-                "/hmi <radius>: Tells you how many times damage was inflicted from within the radius",
-                "dealdmg",
-                " times within "
-        );
-
         cmds.add(new QuickCommand(
                 "map",
                 "/map <mapname>: Sets the name of the next map, for stats purposes",
@@ -152,7 +157,7 @@ public class Commands {
                     public String processCommand(ICommandSender ics, String[] args) throws CommandException {
                         try {
                             return "\u00A76Team 1 is now " + SqlLogger.ACTIVE_LOGGER.adjustTeam(1, args, (EntityPlayer) ics);
-                        }catch(SQLException e){
+                        } catch (SQLException e) {
                             return "\u00A76Teams may be corrupted!";
                         }
                     }
@@ -180,7 +185,7 @@ public class Commands {
                 new ICommandlet() {
                     @Override
                     public String processCommand(ICommandSender ics, String[] args) throws CommandException {
-                        if(ics instanceof EntityPlayer){
+                        if (ics instanceof EntityPlayer) {
                             SqlLogger.ACTIVE_LOGGER.forceResume((EntityPlayer) ics);
                         }
                         return "\u00A76Force unpaused the game";
