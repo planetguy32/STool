@@ -4,6 +4,7 @@ import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.event.FMLServerStartingEvent;
+import cpw.mods.fml.common.event.FMLServerStoppingEvent;
 import cpw.mods.fml.common.eventhandler.Event;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.PlayerEvent;
@@ -14,6 +15,7 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.event.ClickEvent;
+import net.minecraft.item.ItemStack;
 import net.minecraft.scoreboard.ScorePlayerTeam;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.ChatComponentText;
@@ -26,8 +28,10 @@ import net.minecraftforge.common.config.Property;
 import net.minecraftforge.event.ServerChatEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.entity.player.PlayerUseItemEvent;
 import net.minecraftforge.event.world.BlockEvent;
+import org.lwjgl.Sys;
 
 import java.util.*;
 
@@ -98,11 +102,16 @@ public class Stool {
     }
 
     @Mod.EventHandler
-    public static void init(FMLServerStartingEvent event) {
+    public static void startServer(FMLServerStartingEvent event) {
         for(ICommand cmd:Commands.createCommands()){
             event.registerServerCommand(cmd);
         }
-        SqlLogger.setupSql();
+        SqlLogger.ACTIVE_LOGGER.setupSql();
+    }
+
+    @Mod.EventHandler
+    public static void shutdownServer(FMLServerStoppingEvent event) {
+        SqlLogger.ACTIVE_LOGGER.shutdown();
     }
 
     @SubscribeEvent
@@ -115,27 +124,30 @@ public class Stool {
         }
 
         String text = event.message;
-        if ("pause".equals(text)) {
-            if (SqlLogger.pause(event.player))
-                setChatMessage(event, "\u00A74" + event.message, username);
-        }
-        if ("resume".equals(text)) {
-            if (SqlLogger.resume(event.player))
-                setChatMessage(event, "\u00A7A" + event.message, username);
-        }
-        if ("go".equals(text)) {
-            tryToStartMatch(event, false);
-            setChatMessage(event, "\u00A7A"+event.message, username);
-        }
-        if ("ready".equals(text)) {
-            broadcastMessage(SqlLogger.getCurrentGameGuess());
-        }
-        if ("gg".equals(text)){
-            setChatMessage(event, "\u00A75" + event.message, username);
+        if ("pause".equals(text)
+                && SqlLogger.ACTIVE_LOGGER.pause(event.player)) {
+            setChatMessage(event, "\u00A74" + event.message, username);
+        } else if ("resume".equals(text)
+                && SqlLogger.ACTIVE_LOGGER.resume(event.player)) {
+            setChatMessage(event, "\u00A7Aresume", username);
+        } else if ("go".equals(text)) {
+            if(tryToStartMatch(event))
+                setChatMessage(event, "\u00A7Ago", username);
+            else
+                setChatMessage(event, "go", username);
+        } else if ("ready".equals(text)) {
+            broadcastMessage(SqlLogger.ACTIVE_LOGGER.getCurrentGameGuess());
+            setChatMessage(event, "\u00a72ready", username);
+        } else if ("gg".equals(text)) {
+            setChatMessage(event, "\u00A75gg", username);
             broadcastMessage("\u00A76Please end the match - use /win (if you won) or /lose (otherwise)");
+        } else if("ms".equals(text)){
+            event.setCanceled(true);
+            sendMessage(event.player, SqlLogger.ACTIVE_LOGGER.getCurrentGameGuess());
+        } else {
+            setChatMessage(event, text, username);
+            SqlLogger.ACTIVE_LOGGER.addEvent(event.player, "chat", event.message);
         }
-        setChatMessage(event, text, username);
-        SqlLogger.addEvent(event.player, "chat", event.message);
     }
 
     private int time = 0;
@@ -150,12 +162,12 @@ public class Stool {
     public void onServerTick(TickEvent.ServerTickEvent event) {
         if (event.phase != TickEvent.Phase.END)
             return;
-        if (SqlLogger.isInGame()) {
+        if (SqlLogger.ACTIVE_LOGGER.isInGame()) {
             time++;
-            //Every 100 ticks, make events
-            if (time % 100 == 0) {
+            //Every 20 ticks, make events
+            if (time % 20 == 0) {
                 for (EntityPlayerMP p : getPlayers()) {
-                    SqlLogger.addEvent(p, "pos");
+                    SqlLogger.ACTIVE_LOGGER.addEvent(p, "pos");
                 }
             }
         }
@@ -163,15 +175,15 @@ public class Stool {
 
     @SubscribeEvent
     public void onJoin(PlayerEvent.PlayerLoggedInEvent event) {
-        SqlLogger.addEvent(event.player, "login");
+        SqlLogger.ACTIVE_LOGGER.addEvent(event.player, "login");
     }
 
     @SubscribeEvent
     public void onLeave(PlayerEvent.PlayerLoggedOutEvent event) {
-        SqlLogger.addEvent(event.player, "logout");
+        SqlLogger.ACTIVE_LOGGER.addEvent(event.player, "logout");
     }
 
-    private void tryToStartMatch(ServerChatEvent event, boolean isFromYN) {
+    private boolean tryToStartMatch(ServerChatEvent event) {
         @SuppressWarnings("unchecked") List<EntityPlayerMP> players =
                 MinecraftServer.getServer()
                         .getConfigurationManager()
@@ -182,7 +194,10 @@ public class Stool {
             usernames.add(player.getCommandSenderName());
         }
 
-        broadcastMessage(SqlLogger.startMatch(usernames));
+        String message=SqlLogger.ACTIVE_LOGGER.startMatch(usernames);
+        broadcastMessage(message);
+
+        return true;
     }
 
     public static IChatComponent generateUsernameComponent(EntityPlayer p, String nickname) {
@@ -194,14 +209,18 @@ public class Stool {
     public static void setChatMessage(ServerChatEvent event, String newText, String nick) {
         event.component = new ChatComponentTranslation("chat.type.text",
                 generateUsernameComponent(event.player, nick),
-                newText);
+                new ChatComponentText(newText));
     }
 
     public static void broadcastMessage(String message){
         for(EntityPlayerMP player:getPlayers()){
-            for(String s:message.split("\n")){
-                player.addChatMessage(new ChatComponentText(s));
-            }
+            sendMessage(player,message);
+        }
+    }
+
+    public static void sendMessage(EntityPlayer player, String message){
+        for(String s:message.split("\n")){
+            player.addChatMessage(new ChatComponentText(s));
         }
     }
 
@@ -215,11 +234,11 @@ public class Stool {
             String dealerName = "";
             if (dealer instanceof EntityPlayerMP)
                 dealerName = ((EntityPlayerMP) dealer).getDisplayName();
-            SqlLogger.addEvent(player, "death", source.damageType, dealerName);
+            SqlLogger.ACTIVE_LOGGER.addEvent(player, "death", source.damageType, dealerName);
             for(Object playerObj:MinecraftServer.getServer().getConfigurationManager().playerEntityList){
                 EntityPlayerMP otherPlayer= (EntityPlayerMP) playerObj;
                 if(otherPlayer.getDisplayName().equals(dealerName)) {
-                    SqlLogger.addEvent(otherPlayer, "kill", source.damageType, player.getDisplayName());
+                    SqlLogger.ACTIVE_LOGGER.addEvent(otherPlayer, "kill", source.damageType, player.getDisplayName());
                     break;
                 }
             }
@@ -236,54 +255,82 @@ public class Stool {
             String dealerName = "";
             if (dealer instanceof EntityPlayerMP)
                 dealerName = ((EntityPlayerMP) dealer).getDisplayName();
-            SqlLogger.addEvent(player, "takedmg", source.damageType, dealerName);
+            SqlLogger.ACTIVE_LOGGER.addEvent(player, "takedmg", source.damageType, dealerName);
             for(Object playerObj:MinecraftServer.getServer().getConfigurationManager().playerEntityList){
                 EntityPlayerMP otherPlayer= (EntityPlayerMP) playerObj;
                 if(otherPlayer.getDisplayName().equals(dealerName)) {
-                    SqlLogger.addEvent(otherPlayer, "dealdmg", source.damageType, player.getDisplayName());
+                    SqlLogger.ACTIVE_LOGGER.addEvent(otherPlayer, "dealdmg", source.damageType, player.getDisplayName());
                     break;
                 }
             }
         }
     }
 
-    private boolean logEvent(Event event) {
-        return true;
+    @SubscribeEvent
+    public void handle(PlayerUseItemEvent.Start event) {
+        SqlLogger.ACTIVE_LOGGER.addEvent(
+                event.entityPlayer,
+                "itemStart",
+                event.item.getDisplayName(), event.duration + "");
+
+    }
+
+    /* A very spammy event
+    @SubscribeEvent
+    public void handle(PlayerUseItemEvent.Tick event) {
+        SqlLogger.ACTIVE_LOGGER.addEvent(
+                event.entityPlayer,
+                "itemTick",
+                event.item.getDisplayName(), event.duration + "");
+
+    }
+    */
+
+    @SubscribeEvent
+    public void handle(PlayerUseItemEvent.Stop event) {
+        SqlLogger.ACTIVE_LOGGER.addEvent(
+                event.entityPlayer,
+                "itemStop",
+                event.item.getDisplayName(), event.duration + "");
+
     }
 
     @SubscribeEvent
-    public void handle(PlayerUseItemEvent event) {
-        System.out.println(event);
-        if (logEvent(event)) {
-            SqlLogger.addEvent(
-                    event.entityPlayer,
-                    "item",
-                    event.item.getDisplayName(), event.duration + "");
-        }
+    public void handle(PlayerUseItemEvent.Finish event) {
+        SqlLogger.ACTIVE_LOGGER.addEvent(
+                event.entityPlayer,
+                "itemFinish",
+                event.item.getDisplayName(), event.duration + "", event.result.getUnlocalizedName());
+
+    }
+
+    @SubscribeEvent
+    public void handle(PlayerInteractEvent event) {
+        SqlLogger.ACTIVE_LOGGER.addEvent(
+                event.entityPlayer,
+                "interact",
+                event.action.name(), event.world.getBlock(event.x, event.y, event.z).getUnlocalizedName());
+
     }
 
     @SubscribeEvent
     public void handle(BlockEvent.BreakEvent event) {
-        /*
-        if (logEvent(event)) {
-            ItemStack hand=event.getPlayer().getItemInUse();
-            SqlLogger.addEvent(
-                    event.getPlayer(),
-                    "break",
-                    event.block.getLocalizedName(),
-                    hand==null ? "null" : hand.getUnlocalizedName());
-        }
-        */
+        ItemStack hand = event.getPlayer().getCurrentEquippedItem();
+        SqlLogger.ACTIVE_LOGGER.addEvent(
+                event.getPlayer(),
+                "break",
+                event.block.getLocalizedName(),
+                hand == null ? "null" : hand.getUnlocalizedName());
+
     }
 
     @SubscribeEvent
     public void handle(BlockEvent.PlaceEvent event) {
-        if (logEvent(event)) {
-            SqlLogger.addEvent(
-                    event.player,
-                    "place",
-                    event.block.getLocalizedName());
-        }
+        SqlLogger.ACTIVE_LOGGER.addEvent(
+                event.player,
+                "place",
+                event.block.getLocalizedName());
+
     }
 
 }

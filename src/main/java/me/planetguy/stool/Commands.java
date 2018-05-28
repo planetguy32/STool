@@ -4,12 +4,9 @@ import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommand;
 import net.minecraft.command.ICommandSender;
-import net.minecraft.command.server.CommandTeleport;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.util.ChatComponentText;
-import org.apache.commons.lang3.StringEscapeUtils;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -34,7 +31,7 @@ public class Commands {
                     public String processCommand(ICommandSender ics, String[] args) throws CommandException {
                         System.out.println("Win");
                         if (ics instanceof EntityPlayer)
-                            SqlLogger.win((EntityPlayer) ics);
+                            SqlLogger.ACTIVE_LOGGER.win((EntityPlayer) ics);
                         return null;
                     }
                 }
@@ -47,7 +44,31 @@ public class Commands {
                     @Override
                     public String processCommand(ICommandSender ics, String[] args) throws CommandException {
                         if (ics instanceof EntityPlayer)
-                            SqlLogger.lose((EntityPlayer) ics);
+                            SqlLogger.ACTIVE_LOGGER.lose((EntityPlayer) ics);
+                        return null;
+                    }
+                }
+        ));
+
+        cmds.add(new QuickCommand(
+                "stalemate",
+                "Stats: Ends the current game, and notes the game as a draw",
+                new ICommandlet() {
+                    @Override
+                    public String processCommand(ICommandSender ics, String[] args) throws CommandException {
+                        SqlLogger.ACTIVE_LOGGER.stalemate((EntityPlayer) ics);
+                        return null;
+                    }
+                }
+        ));
+
+        cmds.add(new QuickCommand(
+                "invalid",
+                "Stats: Ends the current game, and notes the game as invalid",
+                new ICommandlet() {
+                    @Override
+                    public String processCommand(ICommandSender ics, String[] args) throws CommandException {
+                        SqlLogger.ACTIVE_LOGGER.invalid((EntityPlayer) ics);
                         return null;
                     }
                 }
@@ -63,7 +84,7 @@ public class Commands {
                         if (args.length == 3) {
                             String s = CommandBase.getPlayer(ics, args[0]).getDisplayName();
                             System.out.print(s);
-                            SqlLogger.assignPlayerToTeam(
+                            SqlLogger.ACTIVE_LOGGER.assignPlayerToTeam(
                                     s,
                                     Integer.parseInt(args[1]),
                                     args[2]);
@@ -117,7 +138,7 @@ public class Commands {
                     @Override
                     public String processCommand(ICommandSender ics, String[] args) throws CommandException {
                         if (args.length == 1) {
-                            SqlLogger.mapName = args[0];
+                            SqlLogger.ACTIVE_LOGGER.setMap(args[0]);
                         }
                         return "\u00A76Set map to " + args[0];
                     }
@@ -134,10 +155,12 @@ public class Commands {
                         for (String s : args) {
                             names.add(CommandBase.getPlayer(ics, s).getDisplayName());
                         }
-                        SqlLogger.addEvent((EntityPlayer) ics, "adjustTeam", "1", SqlLogger.knownTeam1.toString(), names.toString());
-                        SqlLogger.knownTeam1 = names;
-                        SqlLogger.knownTeam2.removeAll(SqlLogger.knownTeam1);
-                        return "\u00A76Team 1 is now " + String.join(", ", SqlLogger.knownTeam1);
+
+                        try {
+                            return "\u00A76Team 1 is now " + SqlLogger.ACTIVE_LOGGER.adjustTeam(1, args, (EntityPlayer) ics);
+                        }catch(SQLException e){
+                            return "\u00A76Teams may be corrupted!";
+                        }
                     }
                 }
         ));
@@ -152,10 +175,11 @@ public class Commands {
                         for (String s : args) {
                             names.add(CommandBase.getPlayer(ics, s).getDisplayName());
                         }
-                        SqlLogger.addEvent((EntityPlayer) ics, "adjustTeam", "2", SqlLogger.knownTeam2.toString(), names.toString());
-                        SqlLogger.knownTeam2 = names;
-                        SqlLogger.knownTeam1.removeAll(SqlLogger.knownTeam2);
-                        return "\u00A76Team 2 is now " + String.join(", ", SqlLogger.knownTeam2);
+                        try {
+                            return "\u00A76Team 2 is now " + SqlLogger.ACTIVE_LOGGER.adjustTeam(2, args, (EntityPlayer) ics);
+                        } catch (SQLException e) {
+                            return "\u00A76Teams may be corrupted!";
+                        }
                     }
                 }
         ));
@@ -167,7 +191,7 @@ public class Commands {
                     @Override
                     public String processCommand(ICommandSender ics, String[] args) throws CommandException {
                         if(ics instanceof EntityPlayer){
-                            SqlLogger.forceResume((EntityPlayer) ics);
+                            SqlLogger.ACTIVE_LOGGER.forceResume((EntityPlayer) ics);
                         }
                         return "\u00A76Force unpaused the game";
                     }
@@ -205,7 +229,7 @@ public class Commands {
                             int radius = 10;
                             if (args.length == 1)
                                 radius = parseOrDefault(args[0], radius);
-                            int i = SqlLogger.countEventsInBounds(evtype, p.boundingBox.expand(radius, radius, radius));
+                            int i = SqlLogger.ACTIVE_LOGGER.countEventsInBounds(evtype, p.boundingBox.expand(radius, radius, radius));
                             return i + s1 + radius + " blocks";
                         }
                         return "NYI for non-players";

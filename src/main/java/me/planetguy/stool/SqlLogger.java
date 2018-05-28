@@ -2,32 +2,64 @@ package me.planetguy.stool;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.AxisAlignedBB;
+import org.lwjgl.Sys;
 
 import java.sql.*;
 import java.util.*;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingDeque;
 
 public class SqlLogger {
 
-    private static Connection conn = null;
-    private static PreparedStatement addEvent;
-    private static PreparedStatement declareWinner;
-    private static PreparedStatement addMatch;
-    private static PreparedStatement searchNearby;
+    public static SqlLogger ACTIVE_LOGGER=new SqlLogger();
 
-    public static HashSet<String> knownTeam1 = new HashSet<>();
-    public static HashSet<String> knownTeam2 = new HashSet<>();
+    public final int MAX_PER_TEAM=10;
 
-    private static Set<String> pausingUsers = new HashSet<String>();
+    private Connection conn = null;
+    private PreparedStatement addEvent;
+    private PreparedStatement declareWinner;
+    private PreparedStatement addMatch;
+    private PreparedStatement searchNearby;
 
-    private static long matchStart = 0;
+    private PreparedStatement[] setTeam1=new PreparedStatement[MAX_PER_TEAM];
+    private PreparedStatement[] setTeam2=new PreparedStatement[MAX_PER_TEAM];
 
-    private static long currentPausePeriodStart = -1;
-    private static long matchTimeSkipped = 0;
+    private HashSet<String> knownTeam1 = new HashSet<>();
+    private HashSet<String> knownTeam2 = new HashSet<>();
 
-    public static String mapName = "";
+    private Set<String> pausingUsers = new HashSet<>();
 
+    private long matchStart = 0;
 
-    private static void resetMatchData() {
+    private long currentPausePeriodStart = -1;
+    private long matchTimeSkipped = 0;
+
+    private String mapName = "";
+
+    private Thread eventUploader;
+    private final BlockingQueue<StoolEvent> queue=new LinkedBlockingDeque<>();
+
+    public SqlLogger() {
+        eventUploader=new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while(true){
+                    try {
+                        StoolEvent ev=queue.take();
+                        synchronized(this){
+                            addEventToDB(ev);
+                        }
+                    } catch (InterruptedException e) {
+
+                    }
+                }
+            }
+        }, Constants.modID+"_eventUploader");
+        eventUploader.setPriority(Thread.currentThread().getPriority()-1);
+        eventUploader.start();
+    }
+
+    private synchronized void resetMatchData() {
         knownTeam1 = new HashSet<>();
         knownTeam2 = new HashSet<>();
 
@@ -41,12 +73,15 @@ public class SqlLogger {
         mapName = "";
     }
 
-    public static void setupSql() {
+    public synchronized void setupSql() {
         try {
             // db parameters
             String url = "jdbc:sqlite:stool.db";
             // create a connection to the database
             conn = DriverManager.getConnection(url);
+
+
+            conn.setAutoCommit(false);
 
             System.out.println("Connection to SQLite has been established.");
 
@@ -80,8 +115,9 @@ public class SqlLogger {
 
             conn.createStatement().execute(
                     "CREATE TABLE IF NOT EXISTS events (\n"
+                            + " id INTEGER PRIMARY KEY AUTOINCREMENT,"
                             + " match LONG,\n"
-                            + "	realtime long PRIMARY KEY,\n"
+                            + "	realtime long,\n"
                             + "	gametime long,\n"
                             + "	eventtype text NOT NULL,\n"
                             + "	player text,\n"
@@ -98,13 +134,24 @@ public class SqlLogger {
                             "CREATE INDEX plyr_idx ON events (player IDX);");
 
             addMatch = conn.prepareStatement(
-                    "INSERT INTO matches VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, '')");
+                    "INSERT INTO matches" +
+                            " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, '')");
 
             declareWinner = conn.prepareStatement(
                     "UPDATE matches SET winner = ? WHERE starttime = ?");
 
+
+            for(int i=1; i<=10; i++){
+                 setTeam1[i-1] = conn.prepareStatement(
+                        "UPDATE matches SET t1p"+i+" = ? WHERE starttime = ?");
+                 setTeam2[i-1] = conn.prepareStatement(
+                        "UPDATE matches SET t2p"+i+" = ? WHERE starttime = ?");
+            }
+
             addEvent = conn.prepareStatement(
-                    "INSERT INTO events VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                    "INSERT INTO events" +
+                            " (match, realtime, gametime, eventtype, player, x, y, z, extra1, extra2, extra3) " +
+                            " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
             conn.createStatement().execute("CREATE INDEX IF NOT EXISTS `eventsOrderedIdx` ON `events` (\n" +
                     "\t`match`\tASC,\n" +
@@ -127,11 +174,11 @@ public class SqlLogger {
         }
     }
 
-    static long matchTime() {
-        return System.currentTimeMillis() - matchStart - matchTimeSkipped;
+    long matchTime(long timeSample) {
+        return timeSample - matchStart - matchTimeSkipped;
     }
 
-    public static void assignPlayerToTeam(String player, int team, String mapName_) {
+    public synchronized void assignPlayerToTeam(String player, int team, String mapName_) {
         if (mapName_ != null)
             mapName = mapName_;
         if (team == 1) {
@@ -141,13 +188,15 @@ public class SqlLogger {
         }
     }
 
-    public static String startMatch(List<String> users) {
+    public synchronized String startMatch(List<String> users) {
         if(Stool.IS_DB_READ_ONLY)
             return "\u00A76This is edit!";
         if (matchStart == 0) {
             try {
-                //if(knownTeam1.size()==0 || knownTeam2.size()==0)
-                //    return "\u00A76Set up a match first!";
+                if(knownTeam1.size()==0 && knownTeam2.size()==0)
+                    return "\u00A76Cannot setup match with no players!";
+                if(mapName.equals(""))
+                    return "\u00A76Cannot setup match with no map!";
                 matchStart = System.currentTimeMillis();
                 addMatch.setLong(1, matchStart);
                 addMatch.setString(2, mapName);
@@ -189,7 +238,7 @@ public class SqlLogger {
         return "\u00A76Match is in progress?";
     }
 
-    public static boolean pause(EntityPlayer username) {
+    public synchronized boolean pause(EntityPlayer username) {
         pausingUsers.add(username.getDisplayName());
         addEvent(username, "pause", Boolean.toString(currentPausePeriodStart == -1));
         if (currentPausePeriodStart == -1) {
@@ -198,7 +247,7 @@ public class SqlLogger {
         return true;
     }
 
-    public static boolean resume(EntityPlayer username) {
+    public synchronized boolean resume(EntityPlayer username) {
         pausingUsers.remove(username.getDisplayName());
         addEvent(username, "resume", Boolean.toString(pausingUsers.size() == 0));
         if (pausingUsers.size() == 0) {
@@ -211,7 +260,7 @@ public class SqlLogger {
         return true;
     }
 
-    public static boolean forceResume(EntityPlayer username) {
+    public synchronized boolean forceResume(EntityPlayer username) {
         pausingUsers.clear();
         addEvent(username, "fresume", Boolean.toString(pausingUsers.size() == 0));
         //Account for skipped time
@@ -222,37 +271,44 @@ public class SqlLogger {
         return true;
     }
 
-    public static void addEvent(EntityPlayer user, String eventType, String... extras) {
-        if(Stool.IS_DB_READ_ONLY)
+    public synchronized void addEvent(EntityPlayer user, String eventType, String... extras) {
+        if(matchStart==0 || user.worldObj.isRemote)
+            return;
+        long now=System.currentTimeMillis();
+        queue.add(new StoolEvent(now, matchTime(now), user, eventType, extras));
+    }
+
+
+    private synchronized void addEventToDB(StoolEvent e) {
+        if (Stool.IS_DB_READ_ONLY)
             return;
         try {
-            if (matchStart == 0)
-                return;
+            System.out.println("Ev "+e.getEventType()+" "+e.getDisplayName()+String.join(" ", e.getExtras()));
             //Player is not actually in the game
-            if(!(knownTeam1.contains(user.getDisplayName()) || knownTeam2.contains(user.getDisplayName())))
+            if (!(knownTeam1.contains(e.getDisplayName()) || knownTeam2.contains(e.getDisplayName())))
                 return;
             addEvent.setLong(1, matchStart);
-            addEvent.setLong(2, System.currentTimeMillis());
-            addEvent.setLong(3, matchTime());
-            addEvent.setString(4, eventType);
-            addEvent.setString(5, user.getDisplayName());
-            addEvent.setDouble(6, user.posX);
-            addEvent.setDouble(7, user.posY);
-            addEvent.setDouble(8, user.posZ);
+            addEvent.setLong(2, e.realTime);
+            addEvent.setLong(3, e.matchTime);
+            addEvent.setString(4, e.getEventType());
+            addEvent.setString(5, e.getDisplayName());
+            addEvent.setDouble(6, e.posX);
+            addEvent.setDouble(7, e.posY);
+            addEvent.setDouble(8, e.posZ);
             int i;
-            for (i = 0; i < 3 && i < extras.length; i++) {
-                addEvent.setString(i + 9, extras[i]);
+            for (i = 0; i < 3 && i < e.getExtras().length; i++) {
+                addEvent.setString(i + 9, e.getExtras()[i]);
             }
             for (; i < 3; i++) {
                 addEvent.setString(i + 9, "");
             }
             addEvent.execute();
-        } catch (SQLException e) {
-            e.printStackTrace();
+        } catch (SQLException ex) {
+            ex.printStackTrace();
         }
     }
 
-    public static boolean win(EntityPlayer player) {
+    public synchronized boolean win(EntityPlayer player) {
         if (knownTeam1.contains(player.getDisplayName())) {
             return endGame(player, 1);
         } else if (knownTeam2.contains(player.getDisplayName())) {
@@ -262,7 +318,7 @@ public class SqlLogger {
         }
     }
 
-    public static boolean lose(EntityPlayer player) {
+    public synchronized boolean lose(EntityPlayer player) {
         if (knownTeam1.contains(player.getDisplayName())) {
             return endGame(player, 2);
         } else if (knownTeam2.contains(player.getDisplayName())) {
@@ -272,15 +328,30 @@ public class SqlLogger {
         }
     }
 
+    public void stalemate(EntityPlayer player){
+        endGame(player, -2);
+    }
 
-    private static boolean endGame(EntityPlayer player, int winner) {
+    public void invalid(EntityPlayer player){
+        endGame(player, -1);
+    }
+
+
+    private synchronized boolean endGame(EntityPlayer player, int winner) {
         if(Stool.IS_DB_READ_ONLY)
             return false;
         try {
             addEvent(player, "endgame", "" + winner);
             declareWinner.setInt(1, winner);
+            declareWinner.setLong(2, matchStart);
             declareWinner.execute();
-            Stool.broadcastMessage("\u00A76The winners are: " + String.join(",", winner == 1 ? knownTeam1 : knownTeam2));
+            conn.commit();
+            if(winner==1 || winner==2)
+                Stool.broadcastMessage("\u00A76The winners are: " + String.join(",", winner == 1 ? knownTeam1 : knownTeam2));
+            else if(winner==-2)
+                Stool.broadcastMessage("\u00A76Match is a stalemate!");
+            else if(winner==-1)
+                Stool.broadcastMessage("\u00A76Match is invalid!");
             resetMatchData();
             return true;
         } catch (SQLException e) {
@@ -290,18 +361,22 @@ public class SqlLogger {
     }
 
 
-    public static boolean isInGame() {
+    public boolean isInGame() {
         return matchStart != 0;
     }
 
-    public static String getCurrentGameGuess() {
-        return "\u00A76Current game: \n"
+    public synchronized String getCurrentGameGuess() {
+        String s="\u00A76Current game: \n"
                 + "\u00A76Map: " + mapName + "\n"
                 + "\u00A76Team 1: " + String.join(", ", knownTeam1) + "\n"
-                + "\u00A76Team 2: " + String.join(", ", knownTeam2);
+                + "\u00A76Team 2: " + String.join(", ", knownTeam2) + "\n";
+        if (matchStart != 0) {
+            s+="\u00A76Elapsed time:"+matchTime(System.currentTimeMillis())/1000+" seconds\n";
+        }
+        return s;
     }
 
-    public static int countEventsInBounds(String type, AxisAlignedBB aabb) {
+    public synchronized int countEventsInBounds(String type, AxisAlignedBB aabb) {
         try {
             searchNearby.setString(1, type);
             searchNearby.setDouble(2, aabb.minX);
@@ -317,5 +392,51 @@ public class SqlLogger {
 
         }
         return -1;
+    }
+
+    public synchronized CharSequence adjustTeam(int i, String[] names, EntityPlayer ics) throws SQLException {
+        Set<String> team=(i==1 ? knownTeam1 : knownTeam2);
+        Set<String> otherTeam=(i==1 ? knownTeam2 : knownTeam1);
+
+        String oldTeamString=String.join(", ", team);
+        team.clear();
+        team.addAll(Arrays.asList(names));
+
+        //Make sure nobody is on both teams
+        otherTeam.removeAll(team);
+
+        String newTeamString=String.join(", ", team);
+
+        addEvent((EntityPlayer) ics, "adjustTeam",
+                Integer.toString(i),
+                oldTeamString,
+                newTeamString);
+
+        Iterator<String> t1Iterator=knownTeam1.iterator();
+        Iterator<String> t2Iterator=knownTeam2.iterator();
+
+        for(int j=0; j<setTeam1.length; j++){
+            setTeam1[j].setString(1, t1Iterator.hasNext() ? t1Iterator.next() : "");
+            setTeam1[j].setLong(2, matchStart);
+            setTeam1[j].execute();
+
+            setTeam2[j].setString(1, t2Iterator.hasNext() ? t2Iterator.next() : "");
+            setTeam2[j].setLong(2, matchStart);
+            setTeam2[j].execute();
+        }
+
+        return newTeamString;
+    }
+
+    public synchronized void setMap(String map) {
+        mapName = map;
+    }
+
+    public void shutdown() {
+        try {
+            conn.commit();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 }
