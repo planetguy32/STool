@@ -187,7 +187,7 @@ public class SqlLogger {
     }
 
     public synchronized String startMatch(List<String> users) {
-        if(Stool.IS_DB_READ_ONLY)
+        if(Stool.IS_IN_EDIT_SERVER_MODE)
             return "\u00A76This is edit!";
         if (matchStart == 0) {
             try {
@@ -278,7 +278,7 @@ public class SqlLogger {
 
 
     private synchronized void addEventToDB(StoolEvent e) {
-        if (Stool.IS_DB_READ_ONLY)
+        if (Stool.IS_IN_EDIT_SERVER_MODE)
             return;
         try {
             System.out.println("Ev "+e.getEventType()+" "+e.getDisplayName()+String.join(" ", e.getExtras()));
@@ -336,7 +336,7 @@ public class SqlLogger {
 
 
     private synchronized boolean endGame(EntityPlayer player, int winner) {
-        if(Stool.IS_DB_READ_ONLY)
+        if(Stool.IS_IN_EDIT_SERVER_MODE)
             return false;
         try {
             addEvent(player, "endgame", "" + winner);
@@ -436,5 +436,35 @@ public class SqlLogger {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+
+    private static final int COL_WIDTH = 7;
+    private static final int WHITESPACE = 2;
+
+    public String runSqlQuery(String query){
+        StringBuilder sb=new StringBuilder();
+        try {
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery(query);
+
+            int columnsNumber = rs.getMetaData().getColumnCount();
+            while(rs.next()) {
+                sb.append("\u00A76");
+                for (int i = 0; i < columnsNumber; i++) {
+                    //SQL is 1-based (!)
+                    String result=rs.getString(i+1);
+                    result=result.substring(0, Math.min(result.length(), COL_WIDTH));
+                    while(result.length() < COL_WIDTH+WHITESPACE)
+                        result += " ";
+                    sb.append(result);
+                }
+                sb.append("\n");
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            sb.append("\n\u00A74Error: "+e.getMessage());
+        }
+        return sb.toString();
     }
 }

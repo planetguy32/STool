@@ -193,6 +193,17 @@ public class Commands {
                 }
         ));
 
+        cmds.add(new QuickCommand(
+                "sql",
+                "/sql: Runs a SQL command against the DB",
+                new ICommandlet(){
+                    @Override
+                    public String processCommand(ICommandSender ics, String[] args) throws CommandException {
+                        return SqlLogger.ACTIVE_LOGGER.runSqlQuery(String.join(" ", args));
+                    }
+                }
+        ));
+
         /*
         cmds.add(new QuickCommand(
                 "nick",

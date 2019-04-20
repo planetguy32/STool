@@ -45,7 +45,9 @@ public class Stool {
     private String defaultPrefix;
     private String defaultSuffix;
 
-    public static boolean IS_DB_READ_ONLY =false;
+    public static boolean IS_IN_EDIT_SERVER_MODE =false;
+
+    private DbPublisher dbPublisher;
 
     private void setupNicks(){
         try {
@@ -65,7 +67,11 @@ public class Stool {
             defaultSuffix=cfg.getString("defaultSuffix",
                     "ranks","#","Default username suffix");
 
-            IS_DB_READ_ONLY =cfg.getBoolean("readOnly", "general", false, "Should the DB be read-only?");
+            IS_IN_EDIT_SERVER_MODE = cfg.getBoolean("readOnly", "general", false, "Should the DB be read-only?");
+
+            if(IS_IN_EDIT_SERVER_MODE) {
+                dbPublisher = new DbPublisher();
+            }
 
             cfg.save();
 
@@ -97,7 +103,7 @@ public class Stool {
     public void preInit(FMLPreInitializationEvent pie) {
         cfg=new Configuration(pie.getSuggestedConfigurationFile());
         setupNicks();
-        if(IS_DB_READ_ONLY)
+        if(IS_IN_EDIT_SERVER_MODE)
             return;
         MinecraftForge.EVENT_BUS.register(this);
         FMLCommonHandler.instance().bus().register(this);
@@ -106,7 +112,7 @@ public class Stool {
     @Mod.EventHandler
     public static void startServer(FMLServerStartingEvent event) {
         for(ICommand cmd:
-                IS_DB_READ_ONLY
+                IS_IN_EDIT_SERVER_MODE
                         ? Commands.createQueryCommands()
                         :Commands.createGameCommands()
                 ){
@@ -141,19 +147,16 @@ public class Stool {
                 setChatMessage(event, "\u00A7Ago", username);
             else
                 setChatMessage(event, "go", username);
-        } else if ("ready".equals(text)) {
+        } else if ("ready".equals(text) || "status".equals(text)) {
             broadcastMessage(SqlLogger.ACTIVE_LOGGER.getCurrentGameGuess());
-            setChatMessage(event, "\u00a72ready", username);
+            setChatMessage(event, "\u00a72"+text, username);
         } else if ("gg".equals(text)) {
             setChatMessage(event, "\u00A75gg", username);
             broadcastMessage("\u00A76Please end the match - use /win (if you won) or /lose (otherwise)");
-        } else if("ms".equals(text)){
-            event.setCanceled(true);
-            sendMessage(event.player, SqlLogger.ACTIVE_LOGGER.getCurrentGameGuess());
         } else {
             setChatMessage(event, text, username);
-            SqlLogger.ACTIVE_LOGGER.addEvent(event.player, "chat", event.message);
         }
+        SqlLogger.ACTIVE_LOGGER.addEvent(event.player, "chat", event.message);
     }
 
     private int time = 0;
@@ -176,6 +179,9 @@ public class Stool {
                 for (EntityPlayerMP p : getPlayers()) {
                     SqlLogger.ACTIVE_LOGGER.addEvent(p, "pos");
                 }
+            }
+            if (time % (20*60) == 0) {
+                broadcastMessage("In-game, t+"+(time % (20*60)+" minutes"));
             }
         }
     }
