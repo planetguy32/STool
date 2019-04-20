@@ -128,6 +128,8 @@ public class Stool {
 
     @SubscribeEvent
     public void handle(ServerChatEvent event) {
+        SqlLogger.ACTIVE_LOGGER.addEvent(event.player, "chat", event.message);
+
         String username;
         if(nicks.containsKey(event.username)){
             username=nicks.get(event.username);
@@ -156,7 +158,6 @@ public class Stool {
         } else {
             setChatMessage(event, text, username);
         }
-        SqlLogger.ACTIVE_LOGGER.addEvent(event.player, "chat", event.message);
     }
 
     private int time = 0;
@@ -181,7 +182,7 @@ public class Stool {
                 }
             }
             if (time % (20*60) == 0) {
-                broadcastMessage("In-game, t+"+(time % (20*60)+" minutes"));
+                broadcastMessage("In-game, t+"+(time / (20*60)+" minutes"));
             }
         }
     }

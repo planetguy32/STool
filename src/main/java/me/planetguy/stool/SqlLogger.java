@@ -280,11 +280,12 @@ public class SqlLogger {
     private synchronized void addEventToDB(StoolEvent e) {
         if (Stool.IS_IN_EDIT_SERVER_MODE)
             return;
+        if (matchStart == 0) {
+            Stool.broadcastMessage("\u00A76No match ongoing!");
+            return;
+        }
         try {
             System.out.println("Ev "+e.getEventType()+" "+e.getDisplayName()+String.join(" ", e.getExtras()));
-            //Player is not actually in the game
-            if (!(knownTeam1.contains(e.getDisplayName()) || knownTeam2.contains(e.getDisplayName())))
-                return;
             addEvent.setLong(1, matchStart);
             addEvent.setLong(2, e.realTime);
             addEvent.setLong(3, e.matchTime);
